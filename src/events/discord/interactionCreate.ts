@@ -26,17 +26,26 @@ export default async (bot: Bot, client: Client, interaction: Interaction) => {
 
     if (interaction.isButton()) {
         if (!voiceChannel) {
-            return interaction.reply({ content: `❌ | You are not connected to an audio channel.`, ephemeral: true, components: [] });
+            return interaction.reply({ content: `❌ | You are not connected to an audio channel.`, ephemeral: true, components: [] })
+                .catch((error) => {
+                    bot.logger.emit('error', '[interactionCreate] Error reply: ' + error);
+                });
         }
         if (interaction.guild?.members.me?.voice.channel && voiceChannel.id !== interaction.guild.members.me.voice.channelId) {
-            return interaction.reply({ content: `❌ | You are not on the same audio channel as me.`, ephemeral: true, components: [] });
+            return interaction.reply({ content: `❌ | You are not on the same audio channel as me.`, ephemeral: true, components: [] })
+                .catch((error) => {
+                    bot.logger.emit('error', '[interactionCreate] Error reply: ' + error);
+                });
         }
 
 
         const player = client.lavashark.getPlayer(interaction.guild!.id);
 
         if (!player) {
-            return interaction.reply({ content: '❌ | There is no music currently playing.', allowedMentions: { repliedUser: false } });
+            return interaction.reply({ content: '❌ | There is no music currently playing.', allowedMentions: { repliedUser: false } })
+                .catch((error) => {
+                    bot.logger.emit('error', '[interactionCreate] Error reply: ' + error);
+                });
         }
 
         try {
@@ -147,7 +156,7 @@ export default async (bot: Bot, client: Client, interaction: Interaction) => {
 
                 case 'Dashboard-Stop': {
                     if (bot.config.autoLeave) {
-                        await player.destroy();
+                        player.destroy();
                     }
                     else {
                         player.queue.clear();
@@ -183,16 +192,16 @@ export default async (bot: Bot, client: Client, interaction: Interaction) => {
                 }
 
                 case 'queuelist-prev': {
-                    if (!player.queuePage) return;
+                    if (!player.setting.queuePage) return;
 
-                    if (player.queuePage.curPage <= 1) {
-                        player.queuePage.curPage = 1;
+                    if (player.setting.queuePage.curPage <= 1) {
+                        player.setting.queuePage.curPage = 1;
                     }
                     else {
-                        player.queuePage.curPage--;
+                        player.setting.queuePage.curPage--;
                     }
 
-                    const page = player.queuePage.curPage;
+                    const page = player.setting.queuePage.curPage;
                     const startIdx = (page - 1) * 10;
                     const endIdx = page * 10;
 
@@ -211,7 +220,7 @@ export default async (bot: Bot, client: Client, interaction: Interaction) => {
                     }
                     else {
                         tracksQueue = tracks.join('\n');
-                        tracksQueue += `\n\n----- Page ${page}/${player.queuePage.maxPage} -----`;
+                        tracksQueue += `\n\n----- Page ${page}/${player.setting.queuePage.maxPage} -----`;
                     }
 
                     const methods = ['Off', 'Single', 'All'];
@@ -223,7 +232,7 @@ export default async (bot: Bot, client: Client, interaction: Interaction) => {
                     const clsButton = new ButtonBuilder().setCustomId('queuelist-clear').setLabel(cst.button.clear).setStyle(ButtonStyle.Danger);
                     const row = new ActionRowBuilder<ButtonBuilder>().addComponents(prevButton, nextButton, delButton, clsButton);
 
-                    await player.queuePage.msg?.edit({
+                    await player.setting.queuePage.msg?.edit({
                         embeds: [embeds.queue(bot.config.embedsColor, nowplaying, tracksQueue, methods[repeatMode])],
                         components: [row],
                         allowedMentions: { repliedUser: false },
@@ -234,16 +243,16 @@ export default async (bot: Bot, client: Client, interaction: Interaction) => {
                 }
 
                 case 'queuelist-next': {
-                    if (!player.queuePage) return;
+                    if (!player.setting.queuePage) return;
 
-                    if (player.queuePage.curPage >= player.queuePage.maxPage) {
-                        player.queuePage.curPage = player.queuePage.maxPage;
+                    if (player.setting.queuePage.curPage >= player.setting.queuePage.maxPage) {
+                        player.setting.queuePage.curPage = player.setting.queuePage.maxPage;
                     }
                     else {
-                        player.queuePage.curPage++;
+                        player.setting.queuePage.curPage++;
                     }
 
-                    const page = player.queuePage.curPage;
+                    const page = player.setting.queuePage.curPage;
                     const startIdx = (page - 1) * 10;
                     const endIdx = page * 10;
 
@@ -262,7 +271,7 @@ export default async (bot: Bot, client: Client, interaction: Interaction) => {
                     }
                     else {
                         tracksQueue = tracks.join('\n');
-                        tracksQueue += `\n\n----- Page ${page}/${player.queuePage.maxPage} -----`;
+                        tracksQueue += `\n\n----- Page ${page}/${player.setting.queuePage.maxPage} -----`;
                     }
 
                     const methods = ['Off', 'Single', 'All'];
@@ -274,7 +283,7 @@ export default async (bot: Bot, client: Client, interaction: Interaction) => {
                     const clsButton = new ButtonBuilder().setCustomId('queuelist-clear').setLabel(cst.button.clear).setStyle(ButtonStyle.Danger);
                     const row = new ActionRowBuilder<ButtonBuilder>().addComponents(prevButton, nextButton, delButton, clsButton);
 
-                    await player.queuePage.msg?.edit({
+                    await player.setting.queuePage.msg?.edit({
                         embeds: [embeds.queue(bot.config.embedsColor, nowplaying, tracksQueue, methods[repeatMode])],
                         components: [row],
                         allowedMentions: { repliedUser: false },
@@ -285,8 +294,10 @@ export default async (bot: Bot, client: Client, interaction: Interaction) => {
                 }
 
                 case 'queuelist-delete': {
-                    await player.queuePage.msg?.delete();
-                    player.queuePage.msg = null;
+                    if (!player.setting.queuePage) return;
+
+                    await player.setting.queuePage.msg?.delete();
+                    player.setting.queuePage.msg = null;
 
                     await interaction.deferUpdate();
                     break;
@@ -295,13 +306,13 @@ export default async (bot: Bot, client: Client, interaction: Interaction) => {
                 case 'queuelist-clear': {
                     player.queue.clear();
 
-                    if (!player.queuePage) return;
+                    if (!player.setting.queuePage) return;
 
-                    player.queuePage.maxPage = Math.ceil(player.queue.tracks.length / 10);
-                    player.queuePage.curPage = 1;
+                    player.setting.queuePage.maxPage = Math.ceil(player.queue.tracks.length / 10);
+                    player.setting.queuePage.curPage = 1;
 
 
-                    const page = player.queuePage.curPage;
+                    const page = player.setting.queuePage.curPage;
                     const startIdx = (page - 1) * 10;
                     const endIdx = page * 10;
 
@@ -320,7 +331,7 @@ export default async (bot: Bot, client: Client, interaction: Interaction) => {
                     }
                     else {
                         tracksQueue = tracks.join('\n');
-                        tracksQueue += `\n\n----- Page ${page}/${player.queuePage.maxPage} -----`;
+                        tracksQueue += `\n\n----- Page ${page}/${player.setting.queuePage.maxPage} -----`;
                     }
 
                     const methods = ['Off', 'Single', 'All'];
@@ -329,7 +340,7 @@ export default async (bot: Bot, client: Client, interaction: Interaction) => {
                     const delButton = new ButtonBuilder().setCustomId('queuelist-delete').setLabel(cst.button.delete).setStyle(ButtonStyle.Primary);
                     const row = new ActionRowBuilder<ButtonBuilder>().addComponents(delButton);
 
-                    await player.queuePage.msg?.edit({
+                    await player.setting.queuePage.msg?.edit({
                         embeds: [embeds.queue(bot.config.embedsColor, nowplaying, tracksQueue, methods[repeatMode])],
                         components: [row],
                         allowedMentions: { repliedUser: false },
@@ -350,20 +361,27 @@ export default async (bot: Bot, client: Client, interaction: Interaction) => {
 
         const cmd = client.commands.get(interaction.commandName);
 
-        if (!cmd) return;
+        try {
+            if (!cmd) return;
 
-        if (cmd.requireAdmin) {
-            if (interaction.user.id !== bot.config.admin)
-                return interaction.reply({ content: `❌ | This command requires administrator privileges.`, allowedMentions: { repliedUser: false } });
-        }
+            if (cmd.requireAdmin) {
+                if (interaction.user.id !== bot.config.admin) {
+                    return interaction.reply({ content: `❌ | This command requires administrator privileges.`, allowedMentions: { repliedUser: false } });
+                }
+            }
 
-        if (cmd.voiceChannel) {
-            if (!voiceChannel) {
-                return interaction.reply({ content: `❌ | You are not connected to an audio channel.`, allowedMentions: { repliedUser: false } });
+            if (cmd.voiceChannel) {
+                if (!voiceChannel) {
+                    return interaction.reply({ content: `❌ | You are not connected to an audio channel.`, allowedMentions: { repliedUser: false } });
+                }
+
+                if (interaction.guild?.members.me?.voice.channel && voiceChannel.id !== interaction.guild.members.me.voice.channelId) {
+                    return interaction.reply({ content: `❌ | You are not on the same audio channel as me.`, allowedMentions: { repliedUser: false } });
+                }
             }
-            if (interaction.guild?.members.me?.voice.channel && voiceChannel.id !== interaction.guild.members.me.voice.channelId) {
-                return interaction.reply({ content: `❌ | You are not on the same audio channel as me.`, allowedMentions: { repliedUser: false } });
-            }
+        } catch (error) {
+            bot.logger.emit('error', '[interactionCreate] Error reply: ' + error);
+            return;
         }
 
 

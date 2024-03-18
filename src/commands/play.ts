@@ -58,11 +58,20 @@ export const execute = async (bot: Bot, client: Client, message: Message, args: 
         selfDeaf: true
     });
 
+    if(!player.setting){
+        player.setting = {
+            queuePage: null,
+            volume: null
+        };
+    }
+
+    const curVolume = player.setting.volume ?? bot.config.defaultVolume;
+
     try {
         // Connects to the voice channel
         await player.connect();
         player.metadata = message;
-        player.filters.setVolume(bot.config.defaultVolume);
+        player.filters.setVolume(curVolume);
     } catch (error) {
         bot.logger.emit('error', 'Error joining channel: ' + error);
         return message.reply({ content: `❌ | I can't join voice channel.`, allowedMentions: { repliedUser: false } });
@@ -89,7 +98,7 @@ export const execute = async (bot: Bot, client: Client, message: Message, args: 
             .catch(async (error) => {
                 bot.logger.emit('error', 'Error playing track: ' + error);
                 await message.reply({ content: `❌ | The service is experiencing some problems, please try again.`, allowedMentions: { repliedUser: false } });
-                return await player.destroy();
+                return player.destroy();
             });
     }
 
@@ -129,11 +138,20 @@ export const slashExecute = async (bot: Bot, client: Client, interaction: ChatIn
         selfDeaf: true
     });
 
+    if(!player.setting){
+        player.setting = {
+            queuePage: null,
+            volume: null
+        };
+    }
+
+    const curVolume = player.setting.volume ?? bot.config.defaultVolume;
+
     try {
         // Connects to the voice channel
         await player.connect();
         player.metadata = interaction;
-        player.filters.setVolume(bot.config.defaultVolume);
+        player.filters.setVolume(curVolume);
     } catch (error) {
         bot.logger.emit('error', 'Error joining channel: ' + error);
         return interaction.editReply({ content: `❌ | I can't join voice channel.`, allowedMentions: { repliedUser: false } });
@@ -160,7 +178,7 @@ export const slashExecute = async (bot: Bot, client: Client, interaction: ChatIn
             .catch(async (error) => {
                 bot.logger.emit('error', 'Error playing track: ' + error);
                 await interaction.editReply({ content: `❌ | The service is experiencing some problems, please try again.`, allowedMentions: { repliedUser: false } });
-                return await player.destroy();
+                return player.destroy();
             });
     }
 
