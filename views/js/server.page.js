@@ -122,6 +122,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                 const maxVolume = data.maxVolume;
                 const loopMode = ['OFF', 'SINGLE', 'ALL'];
                 const songLoop = loopMode[Number(data.repeatMode)];
+                const endpoint = data.endpoint;
 
                 const thumbnailResponse = await (await fetch(`/api/lavashark/getThumbnail/${data.current.source}/${data.current.identifier}`)).text();
                 const thumbnail = thumbnailResponse !== 'NOT_FOUND' ? thumbnailResponse : '';
@@ -147,6 +148,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                 document.getElementById("playing_duration").innerHTML = `Duration: <strong>${songDuration}</strong>`;
                 document.getElementById("playing_volume").innerHTML = `Volume: <strong>${volume} / ${maxVolume}</strong>`;
                 document.getElementById("playing_loop").innerHTML = `Loop: <strong>${songLoop}</strong>`;
+                document.getElementById("playing_endpoint").innerHTML = `Endpoint: <strong>${endpoint}</strong>`;
 
                 notPlayingContent.style.display = 'none';
                 playingContent.style.display = 'block';
@@ -219,3 +221,34 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     // ------------------------------------------------- //
 });
+
+
+async function leaveServer() {
+    const confirmation = confirm("Are you sure you want to leave this server?");
+    if (confirmation) {
+        const guildID = location.pathname.replace('/servers/', '');
+
+        try {
+            const response = await fetch('/api/server/leave', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ guildID: guildID })
+            });
+
+            const data = await response.text();
+
+            if (data === 'SUCCESS') {
+                alert("You have left the server successfully.");
+                window.location.href = '/serverlist';
+            }
+            else {
+                alert("An error occurred while leaving the server. " + data);
+            }
+        } catch (error) {
+            console.error("Error:", error);
+            alert("An error occurred while leaving the server.");
+        }
+    }
+}

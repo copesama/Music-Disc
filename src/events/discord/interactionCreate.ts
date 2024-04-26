@@ -21,7 +21,10 @@ import type { Bot } from "../../@types";
 export default async (bot: Bot, client: Client, interaction: Interaction) => {
     if (bot.blacklist && bot.blacklist.includes(interaction.user.id)) return;
 
-    const guildMember = interaction.guild!.members.cache.get(interaction.user.id);
+    if (!interaction.guild || !interaction.guild.members) return;
+
+
+    const guildMember = interaction.guild.members.cache.get(interaction.user.id);
     const voiceChannel = guildMember!.voice.channel;
 
     if (interaction.isButton()) {
@@ -361,27 +364,34 @@ export default async (bot: Bot, client: Client, interaction: Interaction) => {
 
         const cmd = client.commands.get(interaction.commandName);
 
-        try {
-            if (!cmd) return;
+        if (!cmd) return;
 
-            if (cmd.requireAdmin) {
-                if (interaction.user.id !== bot.config.admin) {
-                    return interaction.reply({ content: `❌ | This command requires administrator privileges.`, allowedMentions: { repliedUser: false } });
-                }
+        if (cmd.requireAdmin) {
+            if (interaction.user.id !== bot.config.admin) {
+                return interaction.reply({ content: `❌ | This command requires administrator privileges.`, allowedMentions: { repliedUser: false } })
+                    .catch((error) => {
+                        bot.logger.emit('error', `[interactionCreate] Error reply: (${interaction.user.username} : /${interaction.commandName})` + error);
+                        return;
+                    });
+            }
+        }
+
+        if (cmd.voiceChannel) {
+            if (!voiceChannel) {
+                return interaction.reply({ content: `❌ | You are not connected to an audio channel.`, allowedMentions: { repliedUser: false } })
+                    .catch((error) => {
+                        bot.logger.emit('error', `[interactionCreate] Error reply: (${interaction.user.username} : /${interaction.commandName})` + error);
+                        return;
+                    });
             }
 
-            if (cmd.voiceChannel) {
-                if (!voiceChannel) {
-                    return interaction.reply({ content: `❌ | You are not connected to an audio channel.`, allowedMentions: { repliedUser: false } });
-                }
-
-                if (interaction.guild?.members.me?.voice.channel && voiceChannel.id !== interaction.guild.members.me.voice.channelId) {
-                    return interaction.reply({ content: `❌ | You are not on the same audio channel as me.`, allowedMentions: { repliedUser: false } });
-                }
+            if (interaction.guild?.members.me?.voice.channel && voiceChannel.id !== interaction.guild.members.me.voice.channelId) {
+                return interaction.reply({ content: `❌ | You are not on the same audio channel as me.`, allowedMentions: { repliedUser: false } })
+                    .catch((error) => {
+                        bot.logger.emit('error', `[interactionCreate] Error reply: (${interaction.user.username} : /${interaction.commandName})` + error);
+                        return;
+                    });
             }
-        } catch (error) {
-            bot.logger.emit('error', '[interactionCreate] Error reply: ' + error);
-            return;
         }
 
 
