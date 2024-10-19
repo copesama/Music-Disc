@@ -3,8 +3,8 @@ import { embeds } from "../embeds";
 import type {
     ChatInputCommandInteraction,
     Client,
-    Collection,
-    Message
+    Message,
+    ReadonlyCollection
 } from "discord.js";
 import type { Bot } from "../@types";
 
@@ -100,16 +100,16 @@ export const execute = async (bot: Bot, client: Client, message: Message, args: 
         const instruction = `Choose a song from **1** to **${tracks.length}** to **remove** or enter others to cancel selection. ⬇️`;
 
         await message.react('👍');
-        await message.reply({
+        const msg = await message.reply({
             content: instruction,
             embeds: [embeds.removeList(bot.config.embedsColor, nowplaying, tracksQueue, methods[repeatMode])],
             allowedMentions: { repliedUser: false }
         });
 
 
-        const collector = message.channel.createMessageCollector({
+        const collector = (message.channel as any /* discord.js type error ? (v14.16.2) */).createMessageCollector({
             time: 10000, // 10s
-            filter: m => m.author.id === message.author.id
+            filter: (m: any) => m.author.id === message.author.id
         });
 
         collector.on('collect', async (query: Message<boolean>) => {
@@ -128,12 +128,21 @@ export const execute = async (bot: Bot, client: Client, message: Message, args: 
                 embeds: [embeds.removeTrack(bot.config.embedsColor, tracks[index - 1])],
                 allowedMentions: { repliedUser: false }
             });
+
+            msg.delete()
+                .catch(() => bot.logger.emit('discord', bot.shardId, 'Failed to edit deleted message.'));
+
             return collector.stop();
         });
 
-        collector.on('end', async (_msg: Collection<string, Message<boolean>>, reason: string) => {
-            if (reason === 'time') {
-                await message.reply({ content: `❌ | Song remove time expired`, allowedMentions: { repliedUser: false } });
+        collector.on('end', async (collected: ReadonlyCollection<string, Message<boolean>>, reason: string) => {
+            if (reason == "time" && collected.size == 0) {
+                await msg.edit({
+                    content: `❌ | Song remove time expired`,
+                    embeds: [],
+                    allowedMentions: { repliedUser: false }
+                })
+                    .catch(() => bot.logger.emit('discord', bot.shardId, 'Failed to edit deleted message.'));
             }
         });
     }
@@ -203,16 +212,16 @@ export const slashExecute = async (bot: Bot, client: Client, interaction: ChatIn
         const repeatMode = player.repeatMode;
         const instruction = `Choose a song from **1** to **${tracks.length}** to **remove** or enter others to cancel selection. ⬇️`;
 
-        await interaction.editReply({
+        const msg = await interaction.editReply({
             content: instruction,
             embeds: [embeds.removeList(bot.config.embedsColor, nowplaying, tracksQueue, methods[repeatMode])],
             allowedMentions: { repliedUser: false }
         });
 
 
-        const collector = interaction.channel!.createMessageCollector({
+        const collector = (interaction.channel as any /* discord.js type error ? (v14.16.2) */).createMessageCollector({
             time: 10000, // 10s
-            filter: m => m.author.id === interaction.user.id
+            filter: (m: any) => m.author.id === interaction.user.id
         });
 
         collector.on('collect', async (query: Message<boolean>) => {
@@ -231,14 +240,22 @@ export const slashExecute = async (bot: Bot, client: Client, interaction: ChatIn
                 embeds: [embeds.removeTrack(bot.config.embedsColor, tracks[index - 1])],
                 allowedMentions: { repliedUser: false }
             });
+
+            msg.delete()
+                .catch(() => bot.logger.emit('discord', bot.shardId, 'Failed to edit deleted message.'));
+
             return collector.stop();
         });
 
-        collector.on('end', async (_msg: Collection<string, Message<boolean>>, reason: string) => {
-            if (reason === 'time') {
-                await interaction.editReply({ content: `❌ | Song remove time expired`, allowedMentions: { repliedUser: false } });
+        collector.on('end', async (collected: ReadonlyCollection<string, Message<boolean>>, reason: string) => {
+            if (reason == "time" && collected.size == 0) {
+                await msg.edit({
+                    content: `❌ | Song remove time expired`,
+                    embeds: [],
+                    allowedMentions: { repliedUser: false }
+                })
+                    .catch(() => bot.logger.emit('discord', bot.shardId, 'Failed to edit deleted message.'));
             }
         });
     }
-
 };

@@ -1,4 +1,3 @@
-version: '3.8'
 services:
   music-disc:
     image: hmes98318/music-disc:latest
@@ -16,11 +15,14 @@ services:
       BOT_PREFIX: "+"
       BOT_PLAYING: "+help | music"
       BOT_EMBEDS_COLOR: "#FFFFFF"
+      BOT_SLASH_COMMAND: true
+
       DEFAULT_VOLUME: 50
       MAX_VOLUME: 100
-      AUTO_LEAVE: "true"
+
+      AUTO_LEAVE: true
       AUTO_LEAVE_COOLDOWN: 5000
-      DISPLAY_VOICE_STATE: "true"
+      DISPLAY_VOICE_STATE: true
 
       # Web dashboard settings
       ENABLE_SITE: true
@@ -37,8 +39,9 @@ services:
       ENABLE_LOCAL_NODE: false
       LOCAL_NODE_AUTO_RESTART: true
     volumes:
-      - ./server:/bot/server    # localnode configuration file
-      - ./nodelist.json:/bot/nodelist.json
-      - ./blacklist.json:/bot/blacklist.json
+      - ./logs:/bot/logs                        # Bot logs
+      - ./server:/bot/server                    # localnode configuration file
+      - ./nodelist.json:/bot/nodelist.json      # Lavalink node list
+      - ./blacklist.json:/bot/blacklist.json    # Discord user blacklist
     ports:
       - 33333:33333

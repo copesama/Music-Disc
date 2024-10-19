@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard</title>
+    <link rel="icon" type="image/x-icon"
+        href="https://raw.githubusercontent.com/hmes98318/Music-Disc/main/public/imgs/html/favicon.ico">
+
+    <link rel="stylesheet" type="text/css" href="/static/css/components/container.css">
+    <link rel="stylesheet" type="text/css" href="/static/css/components/scrollbar.css">
+    <link rel="stylesheet" type="text/css" href="/static/css/maintenance.page.css">
+</head>
+
+<body>
+    <div class="container">
+        <div class="sidebar-left">
+            <a href="/dashboard">Dashboard</a>
+            <a href="/localnode">Local Node</a>
+            <a href="/logs">Logs</a>
+            <a href="/maintenance" class="current-page">Maintenance</a>
+            <a href="/nodeslist">Nodes List</a>
+            <a href="/serverlist">Servers List</a>
+        </div>
+
+        <div class="content">
+            <div id="empty-container"></div>
+
+            <div id="control-buttons">
+                <button id="maintain-btn" onclick="sendMaintainRequest('SEND_MAINTAIN')">Send Maintenance Notice</button>
+            </div>
+
+            <div id="status-message"></div>
+        </div>
+    </div>
+</body>
+
+
+<script src="/static/js/components/navbar.js"></script>
+<script src="/static/js/components/footer.js"></script>
+<script src="/static/js/maintenance.page.js"></script>
+
+</html>

@@ -1,4 +1,4 @@
-import type { LoginType } from "../@types";
+import { LoginType } from "../@types";
 
 
 /**
@@ -14,6 +14,7 @@ export const cst = {
         status                  : 'online',             // 'online' | 'idle' | 'dnd'
         playing                 : '+help | music',
         embedsColor             : '#FFFFFF',
+        slashCommand            : true,
         defaultVolume           : 50,
         maxVolume               : 100,
         autoLeave               : true,
@@ -22,16 +23,27 @@ export const cst = {
         enableSite              : true,
         site: {
             port                : 33333,
-            loginType           : 'USER' as LoginType,              // "USER" | 'OAUTH2'
+            loginType           : LoginType.USER,                   // "USER" | 'OAUTH2'
             username            : 'admin',
             password            : 'password',
             oauth2Link          : null,                             // OAuth2 URL
             oauth2RedirectUri   : `http://localhost:33333/login`    // Redirect link after OAuth2 authentication is complete
         },
         enableLocalNode         : false,
-        localNode:{
+        localNode: {
             autoRestart         : true,
-            downloadLink        : 'https://repo.lavalink.dev/artifacts/lavalink/8d40740b/Lavalink.jar'
+            downloadLink        : 'https://github.com/lavalink-devs/Lavalink/releases/download/4.0.8/Lavalink.jar'
+        },
+        // SessionManager config
+        sessionManager: {
+            validTime: 10 * 60 * 1000,          // Session validity time (ms) (default: 10 minutes)
+            cleanupInterval: 5 * 60 * 1000      // Timing cleaner time (ms) (default: 5 minutes)
+        },
+        // IPBlocker config
+        ipBlocker: {
+            retryLimit: 5,                              // Maximum number of retries (default: 5)
+            unlockTimeoutDuration: 5 * 60 * 1000,       // Blocking time (ms) (default: 5 minutes)
+            cleanupInterval: 5 * 60 * 1000              // Timing cleaner time (ms) (default: 5 minutes)
         }
     },
     blacklist               : [],           // It must be the user ID (string[])
@@ -57,5 +69,110 @@ export const cst = {
         next        : '<:w_next:1153665809990815874>',
         delete      : 'Delete Message',
         clear       : 'Clear Queue'
+    },
+    // Logger
+    logger: {
+        format      : 'YYYY-MM-DD HH:mm:ss',            // Time format 'YYYY-MM-DD HH(hh):mm:ss.l'
+        logDir      : './logs'
+    },
+    cacheExpiration : 30 * 60 * 1000            // stats cache validity time (default: 30 minutes)
+};
+
+/**
+ * Music filter config
+ * (Filter name all lowercase)
+ */
+export const filtersConfig = {
+    bass: {
+        equalizer: [
+            0.25,   // 25 Hz
+            0.2,    // 40 Hz
+            0.1,    // 63 Hz
+            0.1,    // 100 Hz
+            0.05,   // 160 Hz
+            0.0,    // 250 Hz
+            -0.05,  // 400 Hz
+            -0.1,   // 630 Hz
+            0.0,    // 1000 Hz
+            0.0,    // 1600 Hz
+            0.0,    // 2500 Hz
+            0.0,    // 4000 Hz
+            0.0,    // 6300 Hz
+            0.0,    // 10000 Hz
+            0.0     // 16000 Hz
+        ]
+    },
+    karaoke: {
+        karaoke: {
+            level: 0.8,
+            monoLevel: 1.0,
+            filterBand: 220.0,
+            filterWidth: 100.0,
+        }
+    },
+    lowpass: {
+        lowPass: { smoothing: 15 }
+    },
+    nightcore: {
+        equalizer: [
+            0.3,   // 25 Hz
+            0.3,   // 40 Hz
+            0.2,   // 63 Hz
+            0.1,   // 100 Hz
+            0.0,   // 160 Hz
+            0.0,   // 250 Hz
+            0.0,   // 400 Hz
+            0.0,   // 630 Hz
+            0.0,   // 1000 Hz
+            0.1,   // 1600 Hz
+            0.2,   // 2500 Hz
+            0.2,   // 4000 Hz
+            0.1,   // 6300 Hz
+            -0.1,  // 10000 Hz
+            -0.2   // 16000 Hz
+        ],
+        timescale: { pitch: 1.2, rate: 1.15 },
+        tremolo: { depth: 0.2, frequency: 12 }
+    },
+    soft: {
+        equalizer: [
+            0.1,   // 25 Hz
+            0.1,   // 40 Hz
+            0.1,   // 63 Hz
+            0.0,   // 100 Hz
+            0.0,   // 160 Hz
+            0.0,   // 250 Hz
+            0.0,   // 400 Hz
+            -0.1,  // 630 Hz
+            -0.2,  // 1000 Hz
+            0.0,   // 1600 Hz
+            0.0,   // 2500 Hz
+            0.0,   // 4000 Hz
+            0.0,   // 6300 Hz
+            0.0,   // 10000 Hz
+            0.0    // 16000 Hz
+        ],
+        lowPass: { smoothing: 5 }   // 使用低通濾波器，平滑高頻
+    },
+    vaporwave: {
+        equalizer: [
+            0.2,   // 25 Hz
+            0.2,   // 40 Hz
+            0.1,   // 63 Hz
+            0.0,   // 100 Hz
+            -0.1,  // 160 Hz
+            -0.1,  // 250 Hz
+            0.0,   // 400 Hz
+            0.0,   // 630 Hz
+            0.1,   // 1000 Hz
+            0.2,   // 1600 Hz
+            0.3,   // 2500 Hz
+            0.2,   // 4000 Hz
+            0.1,   // 6300 Hz
+            0.0,   // 10000 Hz
+            -0.1   // 16000 Hz
+        ],
+        timescale: { pitch: 0.9, rate: 0.95 },  // 輕微降低音高和速度
+        tremolo: { depth: 0.1, frequency: 6 }
     }
 };

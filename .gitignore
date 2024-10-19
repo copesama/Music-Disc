@@ -1,6 +1,11 @@
 node_modules/
 dist/
+logs/
+
 .env
 
 server/logs/
+server/plugins/
 server/*.jar
+
+.DS_Store

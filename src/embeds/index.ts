@@ -1,12 +1,11 @@
 import { connected, dashboard, disconnect } from "./dashboard.embed";
-import { help } from "./help.embed";
-import { blacklist } from "./msg.embed";
+import { blacklist, filterMsg, help } from "./msg.embed";
 import { ping } from "./ping.embed";
 import { addTrack, addPlaylist, queue } from "./queue.embed";
 import { removeList, removeTrack } from "./remove.embed";
 import { save } from "./save.embed";
 import { server } from "./server.embed";
-import { botStatus, nodeDisconnected, nodesStatus, nodeStatus, validNodeName } from "./status.embed";
+import { botStatus, maintainNotice, nodeDisconnected, nodesStatus, nodeStatus, validNodeName } from "./status.embed";
 
 
 const embeds = {
@@ -17,7 +16,9 @@ const embeds = {
     connected,
     dashboard,
     disconnect,
+    filterMsg,
     help,
+    maintainNotice,
     nodeDisconnected,
     nodesStatus,
     nodeStatus,
